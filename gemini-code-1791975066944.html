@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FLY ME TO THE MOON - Game Interaktif Bahasa Arab</title>
+  <style>
+    :root {
+      --bg-dark: #070b19;
+      --card-bg: rgba(20, 28, 58, 0.95);
+      --accent-gold: #ffd152;
+      --accent-cyan: #00e5ff;
+      --text-white: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-white);
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Screen Views */
+    .screen {
+      display: none;
+      width: 100%;
+      height: 100vh;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* Setup Screen */
+    .setup-card {
+      background: var(--card-bg);
+      border: 2px solid var(--accent-cyan);
+      border-radius: 16px;
+      padding: 30px;
+      width: 90%;
+      max-width: 500px;
+      text-align: center;
+      box-shadow: 0 0 25px rgba(0, 229, 255, 0.3);
+    }
+
+    .setup-card h1 {
+      font-size: 2.2rem;
+      color: var(--accent-gold);
+      margin-bottom: 8px;
+      letter-spacing: 2px;
+      text-shadow: 0 0 10px rgba(255, 209, 82, 0.5);
+    }
+
+    .setup-card p {
+      font-size: 1.1rem;
+      color: #cbd5e1;
+      margin-bottom: 24px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: var(--accent-cyan);
+    }
+
+    select, input {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #334155;
+      background: #0f172a;
+      color: #fff;
+      font-size: 1rem;
+    }
+
+    .team-inputs-container {
+      max-height: 200px;
+      overflow-y: auto;
+      margin-bottom: 20px;
+      padding-right: 5px;
+    }
+
+    .team-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .team-color-badge {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .btn-main {
+      background: linear-gradient(135deg, #f59e0b, #d97706);
+      color: #fff;
+      border: none;
+      padding: 14px 28px;
+      font-size: 1.2rem;
+      font-weight: bold;
+      border-radius: 50px;
+      cursor: pointer;
+      box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .btn-main:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(245, 158, 11, 0.6);
+    }
+
+    /* Arena Screen */
+    #arena-screen {
+      justify-content: flex-start;
+      overflow: hidden;
+      background: radial-gradient(circle at 50% 10%, #1e293b 0%, #070b19 70%);
+    }
+
+    .top-bar {
+      width: 100%;
+      padding: 12px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(15, 23, 42, 0.85);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 10;
+    }
+
+    .turn-indicator {
+      font-size: 1.2rem;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .turn-badge {
+      padding: 6px 16px;
+      border-radius: 20px;
+      color: #fff;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    /* Race Track Layout */
+    .race-track-container {
+      width: 100%;
+      flex: 1;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      overflow: hidden;
+    }
+
+    .moon-target {
+      width: 100%;
+      height: 110px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-bottom: 2px dashed rgba(255, 209, 82, 0.4);
+      position: relative;
+      background: linear-gradient(180deg, rgba(255, 209, 82, 0.1) 0%, transparent 100%);
+    }
+
+    .moon-graphic {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 30% 30%, #fffde7, #ffd54f 60%, #ffb300 100%);
+      box-shadow: 0 0 25px rgba(255, 213, 79, 0.8);
+      position: relative;
+    }
+
+    .moon-label {
+      font-size: 0.9rem;
+      font-weight: bold;
+      color: var(--accent-gold);
+      margin-top: 4px;
+      letter-spacing: 1px;
+    }
+
+    .lanes-wrapper {
+      display: flex;
+      width: 95%;
+      flex: 1;
+      justify-content: space-around;
+      position: relative;
+      padding-bottom: 20px;
+    }
+
+    .lane {
+      flex: 1;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      border-left: 1px dashed rgba(255, 255, 255, 0.08);
+      border-right: 1px dashed rgba(255, 255, 255, 0.08);
+      margin: 0 2px;
+    }
+
+    .lane-footer {
+      position: absolute;
+      bottom: 5px;
+      font-size: 0.85rem;
+      font-weight: bold;
+      text-align: center;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      padding: 0 2px;
+    }
+
+    /* 3D Stylized Rocket */
+    .rocket-node {
+      position: absolute;
+      bottom: 30px;
+      width: 46px;
+      height: 80px;
+      transition: bottom 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      z-index: 5;
+    }
+
+    .rocket-body {
+      width: 24px;
+      height: 48px;
+      border-radius: 50% 50% 20% 20% / 60% 60% 20% 20%;
+      position: relative;
+      box-shadow: inset -4px 0 8px rgba(0,0,0,0.4), inset 3px 0 6px rgba(255,255,255,0.4);
+    }
+
+    .rocket-window {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 10px;
+      height: 10px;
+      background: #e0f2fe;
+      border-radius: 50%;
+      border: 2px solid #64748b;
+      box-shadow: inset 1px 1px 2px #000;
+    }
+
+    .rocket-fin-left, .rocket-fin-right {
+      position: absolute;
+      bottom: 2px;
+      width: 10px;
+      height: 16px;
+      background: inherit;
+      filter: brightness(0.8);
+    }
+
+    .rocket-fin-left {
+      left: -8px;
+      border-radius: 8px 0 0 4px;
+      transform: skewY(20deg);
+    }
+
+    .rocket-fin-right {
+      right: -8px;
+      border-radius: 0 8px 4px 0;
+      transform: skewY(-20deg);
+    }
+
+    .rocket-thruster {
+      width: 10px;
+      height: 6px;
+      background: #475569;
+      border-radius: 0 0 3px 3px;
+    }
+
+    .rocket-flame {
+      width: 12px;
+      height: 18px;
+      background: linear-gradient(180deg, #ffeb3b, #ff5722);
+      border-radius: 50% 50% 80% 80%;
+      display: none;
+      animation: flameFlicker 0.15s infinite alternate;
+    }
+
+    .rocket-node.launching .rocket-flame {
+      display: block;
+    }
+
+    @keyframes flameFlicker {
+      from { transform: scaleY(0.9) scaleX(0.9); }
+      to { transform: scaleY(1.3) scaleX(1.1); }
+    }
+
+    /* Modal Pertanyaan */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.85);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 15px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .question-card {
+      background: #0f172a;
+      border: 3px solid var(--accent-cyan);
+      border-radius: 20px;
+      width: 100%;
+      max-width: 680px;
+      padding: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8);
+      text-align: center;
+      animation: zoomIn 0.3s ease;
+    }
+
+    @keyframes zoomIn {
+      from { transform: scale(0.85); opacity: 0; }
+      to { transform: scale(1); opacity: 1; }
+    }
+
+    .question-header {
+      font-size: 1.1rem;
+      color: var(--accent-gold);
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px solid #334155;
+      padding-bottom: 8px;
+    }
+
+    .arabic-text {
+      font-size: 2rem;
+      direction: rtl;
+      font-family: 'Amiri', 'Traditional Arabic', serif;
+      color: #38bdf8;
+      margin: 16px 0;
+      line-height: 1.6;
+    }
+
+    .question-instruction {
+      font-size: 1.15rem;
+      color: #f1f5f9;
+      margin-bottom: 20px;
+      font-weight: 500;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 15px;
+    }
+
+    @media (max-width: 600px) {
+      .options-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .opt-btn {
+      background: #1e293b;
+      color: #fff;
+      border: 2px solid #334155;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 1.15rem;
+      cursor: pointer;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transition: all 0.2s;
+    }
+
+    .opt-btn:hover:not(:disabled) {
+      background: #334155;
+      border-color: var(--accent-cyan);
+    }
+
+    .opt-btn .opt-badge {
+      background: #0284c7;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.9rem;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .feedback-banner {
+      font-size: 1.1rem;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 10px;
+      display: none;
+      font-weight: bold;
+    }
+
+    .feedback-correct {
+      background: rgba(34, 197, 94, 0.2);
+      color: #4ade80;
+      border: 1px solid #22c55e;
+    }
+
+    .feedback-wrong {
+      background: rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      border: 1px solid #ef4444;
+    }
+
+    /* Screen Akhir */
+    .finish-card {
+      background: var(--card-bg);
+      border: 3px solid var(--accent-gold);
+      border-radius: 20px;
+      padding: 40px 30px;
+      text-align: center;
+      max-width: 520px;
+      width: 90%;
+      box-shadow: 0 0 40px rgba(255, 209, 82, 0.4);
+      animation: zoomIn 0.4s ease;
+    }
+
+    .finish-card h2 {
+      font-size: 2.2rem;
+      color: var(--accent-gold);
+      margin-bottom: 12px;
+    }
+
+    .winner-highlight {
+      font-size: 1.6rem;
+      color: #38bdf8;
+      margin-bottom: 24px;
+      font-weight: bold;
+    }
+
+    .action-group {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+    }
+
+    .btn-secondary {
+      background: #475569;
+      color: #fff;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1.1rem;
+      font-weight: bold;
+      border-radius: 50px;
+      cursor: pointer;
+    }
+
+    #confetti-canvas {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 50;
+    }
+  </style>
+</head>
+<body>
+
+  <canvas id="confetti-canvas"></canvas>
+
+  <!-- SCREEN 1: PENGATURAN AWAL -->
+  <div id="setup-screen" class="screen active">
+    <div class="setup-card">
+      <h1>FLY ME TO THE MOON</h1>
+      <p>Mata Pelajaran: Bahasa Arab (الأدوات المدرسية) - Kelas 7</p>
+
+      <div class="form-group">
+        <label for="team-count">Pilih Jumlah Tim (2 - 8 Tim):</label>
+        <select id="team-count">
+          <option value="2">2 Tim</option>
+          <option value="3">3 Tim</option>
+          <option value="4" selected>4 Tim</option>
+          <option value="5">5 Tim</option>
+          <option value="6">6 Tim</option>
+          <option value="7">7 Tim</option>
+          <option value="8">8 Tim</option>
+        </select>
+      </div>
+
+      <div class="team-inputs-container" id="team-inputs-container"></div>
+
+      <button class="btn-main" id="btn-start-game">Mulai Game</button>
+    </div>
+  </div>
+
+  <!-- SCREEN 2: ARENA PERLOMBAAN -->
+  <div id="arena-screen" class="screen">
+    <div class="top-bar">
+      <div class="turn-indicator">
+        <span>Giliran:</span>
+        <span class="turn-badge" id="current-turn-badge">Tim 1</span>
+      </div>
+      <div>
+        <button class="btn-main" id="btn-open-question" style="padding: 8px 20px; font-size: 1rem;">Buka Pertanyaan</button>
+      </div>
+    </div>
+
+    <div class="race-track-container">
+      <div class="moon-target" id="moon-target">
+        <div class="moon-graphic"></div>
+        <div class="moon-label">FINISH: BULAN</div>
+      </div>
+      <div class="lanes-wrapper" id="lanes-wrapper"></div>
+    </div>
+  </div>
+
+  <!-- MODAL POP-UP PERTANYAAN -->
+  <div class="modal-overlay" id="question-modal">
+    <div class="question-card">
+      <div class="question-header">
+        <span id="q-number-label">Pertanyaan 1/30</span>
+        <span id="modal-team-turn">Giliran: Tim</span>
+      </div>
+      
+      <div class="arabic-text" id="q-arabic-text">قَلَمٌ</div>
+      <div class="question-instruction" id="q-instruction">Apa arti dari kata di atas?</div>
+
+      <div class="options-grid" id="options-container"></div>
+
+      <div class="feedback-banner" id="feedback-banner"></div>
+
+      <div style="margin-top: 15px; display: none;" id="btn-next-wrap">
+        <button class="btn-main" id="btn-next-turn" style="padding: 10px 24px; font-size: 1rem;">Pertanyaan Berikutnya</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN 3: AKHIR PERMAINAN -->
+  <div id="finish-screen" class="screen">
+    <div class="finish-card">
+      <h2>Selamat! Kamu sudah mencapai bulan!</h2>
+      <div class="winner-highlight" id="winner-display-name">Tim Juara</div>
+      <div class="action-group">
+        <button class="btn-main" id="btn-restart-game">Ulangi Game</button>
+        <button class="btn-secondary" id="btn-finish-app">Selesai</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* Web Audio API Engine */
+    const AudioEngine = {
+      ctx: null,
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioCtx();
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      },
+      playLaunchSound() {
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        
+        osc.frequency.setValueAtTime(150, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.6);
+
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.6);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.6);
+      },
+      playWrongSound() {
+        this.init();
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sine';
+
+        osc.frequency.setValueAtTime(220, this.ctx.currentTime);
+        osc.frequency.setValueAtTime(160, this.ctx.currentTime + 0.2);
+
+        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.4);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.4);
+      },
+      playVictorySound() {
+        this.init();
+        const notes = [523.25, 659.25, 783.99, 1046.50];
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          const start = this.ctx.currentTime + (idx * 0.15);
+
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, start);
+
+          gain.gain.setValueAtTime(0.2, start);
+          gain.gain.exponentialRampToValueAtTime(0.01, start + 0.4);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start(start);
+          osc.stop(start + 0.4);
+        });
+      }
+    };
+
+    /* Basis Data Soal: 30 Pertanyaan Bahasa Arab Kelas 7 (الأدوات المدرسية) */
+    const QUESTIONS_DB = [
+      { a: "قَلَمٌ", q: "Apa arti kosakata di atas?", opt: ["Buku tulis", "Pulpen", "Penghapus", "Penggaris"], c: 1 },
+      { a: "كِتَابٌ", q: "Apa arti kosakata di atas?", opt: ["Buku paket/bacaan", "Kotak pensil", "Pensil", "Papan tulis"], c: 0 },
+      { a: "مِسْطَرَةٌ", q: "Apa arti kosakata di atas?", opt: ["Pena", "Jangka", "Penggaris", "Kapur tulis"], c: 2 },
+      { a: "مِمْسَحَةٌ", q: "Apa arti kosakata di atas?", opt: ["Penghapus", "Tas", "Gunting", "Kertas"], c: 0 },
+      { a: "حَقِيْبَةٌ", q: "Apa arti kosakata di atas?", opt: ["Tempat pensil", "Meja", "Tas sekolah", "Peta"], c: 2 },
+      { a: "مِقْلَمَةٌ", q: "Apa arti kosakata di atas?", opt: ["Kotak pensil", "Buku tulis", "Rautan", "Gunting"], c: 0 },
+      { a: "دَفْتَرٌ", q: "Apa arti kosakata di atas?", opt: ["Kamus", "Buku tulis", "Spidol", "Bangku"], c: 1 },
+      { a: "مِبْرَاةٌ", q: "Apa arti kosakata di atas?", opt: ["Rautan pensil", "Penghapus", "Jangka", "Pena"], c: 0 },
+      { a: "قَلَمُ الرَّصَاصِ", q: "Apa makna dari kata majemuk di atas?", opt: ["Pensil", "Spidol", "Pulpen", "Kapur"], c: 0 },
+      { a: "سَبُّوْرَةٌ", q: "Benda perlengkapan kelas apakah ini?", opt: ["Papan tulis", "Dinding", "Pintu", "Jendela"], c: 0 },
+      { a: "فِرْجَارٌ", q: "Alat sekolah penunjang geometri ini adalah...", opt: ["Penggaris busur", "Jangka", "Gunting", "Kertas origami"], c: 1 },
+      { a: "مِقَصٌّ", q: "Apa makna kosakata di atas?", opt: ["Gunting", "Pisau raut", "Lem", "Penjepit kertas"], c: 0 },
+      { a: "لِصَاقٌ", q: "Benda apakah ini?", opt: ["Tinta", "Pita", "Lem/Perekat", "Kertas"], c: 2 },
+      { a: "مَكْتَبٌ", q: "Perlengkapan fisik ruang kelas ini adalah...", opt: ["Kursi", "Meja", "Lemari", "Laci"], c: 1 },
+      { a: "كُرْسِيٌّ", q: "Arti dari kosakata di atas adalah...", opt: ["Pintu", "Kursi", "Meja", "Papan pengumuman"], c: 1 },
+      { a: "طَبَاشِيرُ", q: "Peralatan tulis tradisional ini berarti...", opt: ["Kapur tulis", "Spidol", "Arang tulis", "Penghapus papan"], c: 0 },
+      { a: "خَرِيْطَةٌ", q: "Media belajar geografi di dinding kelas ini adalah...", opt: ["Kalender", "Peta", "Lukisan", "Cermin"], c: 1 },
+      { a: "سَاعَةُ الجِدَارِ", q: "Perlengkapan penunjuk waktu di kelas ini adalah...", opt: ["Jam dinding", "Jendela", "Lampu", "Bel sekolah"], c: 0 },
+      { a: "خِزَانَةٌ", q: "Perabot penyimpanan di kelas ini adalah...", opt: ["Rak sepatu", "Lemari", "Meja guru", "Loker"], c: 1 },
+      { a: "طَلَّاسَةٌ", q: "Benda yang digunakan untuk membersihkan papan tulis adalah...", opt: ["Kain pel", "Penghapus papan tulis", "Sapu", "Kemonceng"], c: 1 },
+      { a: "مِكْنَسَةٌ", q: "Peralatan kebersihan kelas ini adalah...", opt: ["Tempat sampah", "Sapu", "Ember", "Lap meja"], c: 1 },
+      { a: "مَزْبَلَةٌ", q: "Arti dari kosakata kebersihan ini adalah...", opt: ["Tempat sampah", "Sapu lidi", "Pengki", "Serokan"], c: 0 },
+      { a: "جَرْوَلٌ", q: "Benda yang menemani sapu ini berarti...", opt: ["Pengki/serokan sampah", "Ember", "Kain basah", "Sikat"], c: 0 },
+      { a: "تَقْوِيمٌ", q: "Benda penanggalan yang terpasang di dinding adalah...", opt: ["Daftar hadir", "Jadwal pelajaran", "Kalender", "Tata tertib"], c: 2 },
+      { a: "وَرَقَةٌ", q: "Arti dari benda di atas adalah...", opt: ["Buku", "Kertas", "Sampul", "Kardus"], c: 1 },
+      { a: "مُعْجَمٌ", q: "Buku rujukan bahasa ini berarti...", opt: ["Kamus", "Ensiklopedia", "Majalah", "Novel"], c: 0 },
+      { a: "حِبْرٌ", q: "Cairan pengisi pulpen atau spidol ini adalah...", opt: ["Air", "Lem", "Tinta", "Cat warna"], c: 2 },
+      { a: "قَلَمُ التَّخْطِيطِ", q: "Alat tulis untuk menebalkan teks ini adalah...", opt: ["Spidol / Marker", "Krayon", "Pensil warna", "Kuas"], c: 0 },
+      { a: "غِلَافٌ", q: "Perlengkapan pelindung buku ini adalah...", opt: ["Sampul buku", "Pembatas buku", "Map", "Stiker nama"], c: 0 },
+      { a: "مِحْفَظَةٌ", q: "Wadah perlengkapan kecil atau berkas ini berarti...", opt: ["Dompet/Tas kecil berkas", "Ransel", "Koper", "Kotak bekal"], c: 0 }
+    ];
+
+    const TEAM_PALETTES = [
+      { name: "Tim Merah", color: "#ef4444" },
+      { name: "Tim Biru", color: "#3b82f6" },
+      { name: "Tim Hijau", color: "#10b981" },
+      { name: "Tim Kuning", color: "#f59e0b" },
+      { name: "Tim Ungu", color: "#a855f7" },
+      { name: "Tim Oranye", color: "#f97316" },
+      { name: "Tim Cyan", color: "#06b6d4" },
+      { name: "Tim Pink", color: "#ec4899" }
+    ];
+
+    /* Game State */
+    let teams = [];
+    let currentTeamIndex = 0;
+    let questionIndex = 0;
+    let shuffledQuestions = [];
+    const STEPS_TO_WIN = 5;
+
+    /* Elemen Antarmuka */
+    const setupScreen = document.getElementById('setup-screen');
+    const arenaScreen = document.getElementById('arena-screen');
+    const finishScreen = document.getElementById('finish-screen');
+    const teamCountSelect = document.getElementById('team-count');
+    const teamInputsContainer = document.getElementById('team-inputs-container');
+    const lanesWrapper = document.getElementById('lanes-wrapper');
+    const currentTurnBadge = document.getElementById('current-turn-badge');
+    const questionModal = document.getElementById('question-modal');
+    const qArabicText = document.getElementById('q-arabic-text');
+    const qInstruction = document.getElementById('q-instruction');
+    const optionsContainer = document.getElementById('options-container');
+    const feedbackBanner = document.getElementById('feedback-banner');
+    const btnNextWrap = document.getElementById('btn-next-wrap');
+    const btnNextTurn = document.getElementById('btn-next-turn');
+    const btnStartGame = document.getElementById('btn-start-game');
+    const btnOpenQuestion = document.getElementById('btn-open-question');
+    const winnerDisplayName = document.getElementById('winner-display-name');
+    const btnRestartGame = document.getElementById('btn-restart-game');
+    const btnFinishApp = document.getElementById('btn-finish-app');
+    const qNumberLabel = document.getElementById('q-number-label');
+    const modalTeamTurn = document.getElementById('modal-team-turn');
+
+    /* Inisialisasi Input Tim */
+    function renderTeamInputs() {
+      const count = parseInt(teamCountSelect.value, 10);
+      teamInputsContainer.innerHTML = '';
+      for (let i = 0; i < count; i++) {
+        const row = document.createElement('div');
+        row.className = 'team-row';
+        row.innerHTML = `
+          <div class="team-color-badge" style="background-color: ${TEAM_PALETTES[i].color}"></div>
+          <input type="text" id="team-name-${i}" value="${TEAM_PALETTES[i].name}" placeholder="Nama Tim ${i + 1}" maxlength="15">
+        `;
+        teamInputsContainer.appendChild(row);
+      }
+    }
+
+    teamCountSelect.addEventListener('change', renderTeamInputs);
+    renderTeamInputs();
+
+    /* Helper Acak Array */
+    function shuffleArray(arr) {
+      const array = [...arr];
+      for (let i = array.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+      return array;
+    }
+
+    /* Mulai Game */
+    btnStartGame.addEventListener('click', () => {
+      AudioEngine.init();
+      const count = parseInt(teamCountSelect.value, 10);
+      teams = [];
+      for (let i = 0; i < count; i++) {
+        const inputVal = document.getElementById(`team-name-${i}`).value.trim();
+        teams.push({
+          id: i,
+          name: inputVal || TEAM_PALETTES[i].name,
+          color: TEAM_PALETTES[i].color,
+          score: 0
+        });
+      }
+
+      currentTeamIndex = 0;
+      questionIndex = 0;
+      shuffledQuestions = shuffleArray(QUESTIONS_DB);
+
+      buildTrack();
+      updateTurnUI();
+
+      setupScreen.classList.remove('active');
+      arenaScreen.classList.add('active');
+    });
+
+    /* Bangun Jalur Roket */
+    function buildTrack() {
+      lanesWrapper.innerHTML = '';
+      teams.forEach((t) => {
+        const lane = document.createElement('div');
+        lane.className = 'lane';
+        lane.id = `lane-${t.id}`;
+
+        const rocket = document.createElement('div');
+        rocket.className = 'rocket-node';
+        rocket.id = `rocket-${t.id}`;
+        rocket.style.bottom = '20px';
+
+        rocket.innerHTML = `
+          <div class="rocket-body" style="background-color: ${t.color};">
+            <div class="rocket-window"></div>
+            <div class="rocket-fin-left"></div>
+            <div class="rocket-fin-right"></div>
+          </div>
+          <div class="rocket-thruster"></div>
+          <div class="rocket-flame"></div>
+        `;
+
+        const footer = document.createElement('div');
+        footer.className = 'lane-footer';
+        footer.style.color = t.color;
+        footer.textContent = t.name;
+
+        lane.appendChild(rocket);
+        lane.appendChild(footer);
+        lanesWrapper.appendChild(lane);
+      });
+    }
+
+    /* Perbarui Tampilan Giliran */
+    function updateTurnUI() {
+      const activeTeam = teams[currentTeamIndex];
+      currentTurnBadge.textContent = activeTeam.name;
+      currentTurnBadge.style.backgroundColor = activeTeam.color;
+    }
+
+    /* Tampilkan Pop-Up Pertanyaan */
+    btnOpenQuestion.addEventListener('click', () => {
+      AudioEngine.init();
+      if (questionIndex >= shuffledQuestions.length) {
+        shuffledQuestions = shuffleArray(QUESTIONS_DB);
+        questionIndex = 0;
+      }
+
+      const qData = shuffledQuestions[questionIndex];
+      const activeTeam = teams[currentTeamIndex];
+
+      qNumberLabel.textContent = `Pertanyaan ${questionIndex + 1}/30`;
+      modalTeamTurn.textContent = `Giliran: ${activeTeam.name}`;
+      modalTeamTurn.style.color = activeTeam.color;
+
+      qArabicText.textContent = qData.a;
+      qInstruction.textContent = qData.q;
+
+      optionsContainer.innerHTML = '';
+      feedbackBanner.style.display = 'none';
+      btnNextWrap.style.display = 'none';
+
+      const optLabels = ['A', 'B', 'C', 'D'];
+      qData.opt.forEach((optText, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'opt-btn';
+        btn.innerHTML = `<span class="opt-badge">${optLabels[idx]}</span><span>${optText}</span>`;
+        btn.onclick = () => handleAnswerChoice(idx, qData.c);
+        optionsContainer.appendChild(btn);
+      });
+
+      questionModal.classList.add('active');
+    });
+
+    /* Handler Pilihan Jawaban */
+    function handleAnswerChoice(chosenIdx, correctIdx) {
+      const buttons = optionsContainer.querySelectorAll('.opt-btn');
+      buttons.forEach(b => b.disabled = true);
+
+      const activeTeam = teams[currentTeamIndex];
+      const rocketElem = document.getElementById(`rocket-${activeTeam.id}`);
+
+      if (chosenIdx === correctIdx) {
+        AudioEngine.playLaunchSound();
+        feedbackBanner.className = 'feedback-banner feedback-correct';
+        feedbackBanner.textContent = 'Jawaban Benar! Roket melesat ke atas!';
+        feedbackBanner.style.display = 'block';
+
+        activeTeam.score += 1;
+        rocketElem.classList.add('launching');
+
+        // Kalkulasi posisi ketinggian menuju bulan
+        const containerHeight = lanesWrapper.clientHeight;
+        const bottomOffset = 30;
+        const availableHeight = containerHeight - 110;
+        const stepPx = availableHeight / STEPS_TO_WIN;
+        const newBottom = bottomOffset + (activeTeam.score * stepPx);
+
+        rocketElem.style.bottom = `${newBottom}px`;
+
+        setTimeout(() => {
+          rocketElem.classList.remove('launching');
+          if (activeTeam.score >= STEPS_TO_WIN) {
+            triggerVictory(activeTeam);
+          }
+        }, 800);
+
+      } else {
+        AudioEngine.playWrongSound();
+        feedbackBanner.className = 'feedback-banner feedback-wrong';
+        feedbackBanner.textContent = 'Jawaban salah, roket tidak bergerak';
+        feedbackBanner.style.display = 'block';
+      }
+
+      btnNextWrap.style.display = 'block';
+    }
+
+    /* Pertanyaan Berikutnya / Ganti Giliran */
+    btnNextTurn.addEventListener('click', () => {
+      questionModal.classList.remove('active');
+      questionIndex++;
+      currentTeamIndex = (currentTeamIndex + 1) % teams.length;
+      updateTurnUI();
+    });
+
+    /* Kemenangan */
+    function triggerVictory(winnerTeam) {
+      questionModal.classList.remove('active');
+      arenaScreen.classList.remove('active');
+      finishScreen.classList.add('active');
+
+      winnerDisplayName.textContent = `🚀 ${winnerTeam.name} Berhasil Mencapai Bulan! 🌕`;
+      winnerDisplayName.style.color = winnerTeam.color;
+
+      AudioEngine.playVictorySound();
+      startConfetti();
+    }
+
+    /* Animasi Konfeti Sederhana */
+    const canvas = document.getElementById('confetti-canvas');
+    const ctx = canvas.getContext('2d');
+    let confettiParticles = [];
+    let confettiAnimId = null;
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function startConfetti() {
+      confettiParticles = [];
+      const colors = ['#ffd152', '#00e5ff', '#ef4444', '#10b981', '#ec4899'];
+      for (let i = 0; i < 90; i++) {
+        confettiParticles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          size: Math.random() * 8 + 4,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          speedY: Math.random() * 3 + 2,
+          speedX: Math.random() * 2 - 1
+        });
+      }
+      animateConfetti();
+    }
+
+    function animateConfetti() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      confettiParticles.forEach(p => {
+        p.y += p.speedY;
+        p.x += p.speedX;
+        if (p.y > canvas.height) p.y = -10;
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x, p.y, p.size, p.size);
+      });
+      confettiAnimId = requestAnimationFrame(animateConfetti);
+    }
+
+    function stopConfetti() {
+      if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    /* Tombol Layar Akhir */
+    btnRestartGame.addEventListener('click', () => {
+      stopConfetti();
+      finishScreen.classList.remove('active');
+      setupScreen.classList.add('active');
+    });
+
+    btnFinishApp.addEventListener('click', () => {
+      stopConfetti();
+      finishScreen.classList.remove('active');
+      document.body.innerHTML = `
+        <div style="display:flex;height:100vh;align-items:center;justify-content:center;flex-direction:column;gap:15px;text-align:center;">
+          <h1 style="color:var(--accent-gold); font-size: 2.2rem;">Permainan Selesai</h1>
+          <p style="color:#cbd5e1; font-size: 1.2rem;">Terima kasih telah bermain FLY ME TO THE MOON!</p>
+          <button class="btn-main" onclick="location.reload()">Muat Ulang Halaman</button>
+        </div>
+      `;
+    });
+  </script>
+</body>
+</html>
